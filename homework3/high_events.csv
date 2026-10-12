@@ -1,0 +1,5 @@
+id,severity,type
+2,high,bruteforce
+3,high,malware-detected
+4,high,sql-injection
+5,high,suspicious-login
