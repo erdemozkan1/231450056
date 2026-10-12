@@ -1,50 +1,76 @@
-# Homework 3 - Mini Security Event API
+Markdown
+# Homework 3: Mini Security Event API
 
-## Ödevin Amacı
-Bu ödevin amacı; Python'da yerleşik `http.server` ve `urllib` kütüphanelerini kullanarak yerel bir REST API sunucusu (server) ve bu sunucuyla HTTP üzerinden haberleşen bir istemci (client) geliştirmektir. Bu projede HTTP metotları, REST mimarisi, JSON veri formatı, HTTP durum kodları (status codes) ve hata yönetimi (exception handling) gibi web teknolojileri uygulamalı olarak kullanılmıştır.
+Bu proje, Python'ın yerleşik kütüphaneleri (`http.server`, `urllib`, `json`, `csv`) kullanılarak geliştirilmiş, HTTP protokolü, REST API mimarisi, JSON veri formatı, durum kodları (status codes), hata yönetimi ve veri filtreleme konularını kapsayan bir istemci-sunucu (client-server) uygulamasıdır.
 
-## Kullanılan Endpoint'ler
-Sunucu (Server) uygulaması aşağıdaki HTTP GET endpoint'lerini desteklemektedir:
+## 1. Klasör Yapısı
 
-* **`/api/events`**: Tüm güvenlik olaylarını JSON formatında döndürür.
-* **`/api/events/high`**: Yalnızca `severity` (önem) değeri "high" olan güvenlik olaylarını döndürür.
-* **`/api/summary`**: Güvenlik olaylarının (low, medium, high) sayıca dağılımını içeren özet bilgiyi döndürür.
+Proje deposu içerisinde `homework3` klasörünün yapısı şu şekildedir:
 
-## Kurulum ve Çalıştırma
-Sistemin doğru çalışabilmesi için Server ve Client uygulamalarının eşzamanlı olarak çalışması gerekmektedir. İki farklı terminal penceresi kullanınız.
-
-**1. Sunucuyu (Server) Başlatmak:**
-Birinci terminali açın, `homework3` klasörüne gidin ve sunucuyu başlatın:
-```bash
+```text
+yazilim-laboratuvari/
+│
+├── homework1/
+├── homework2/
+└── homework3/
+    ├── server.py
+    ├── client.py
+    ├── high_events.csv
+    └── README.md
+```
+## 2. Server Uygulaması (server.py)  
+Sunucu tarafı, harici bir çatı (Flask vb.) kullanılmadan tamamen Python'ın yerleşik http.server modülüyle geliştirilmiştir. Hafızasında farklı önem seviyelerine (low, medium, high) sahip en az 8 adet güvenlik olayı barındırır.   
+Desteklenen Endpoint'ler:   
+GET /api/events: Tüm güvenlik olaylarını JSON formatında döndürür.   
+GET /api/events/high: Yalnızca severity değeri high olan olayları filtreleyerek döndürür.  
+GET /api/summary: Toplam olay sayısını ve önem seviyelerine göre dağılım özetini döndürür.  
+Tanımsız Endpoint'ler: Geçersiz bir adres çağrıldığında 404 durum kodu ve JSON formatında hata mesajı döner ({"error": "Endpoint not found"}).   
+## 3. Client Uygulaması (client.py)
+İstemci uygulaması, sunucu üzerindeki /api/events endpointine bir HTTP GET isteği gönderir. Gelen JSON verisini işleyerek aşağıdaki işlemleri gerçekleştirir:   
+Toplam olay sayısını hesaplar.  
+low, medium ve high önem seviyelerinin dağılımını ekrana yazdırır.   
+Yalnızca high seviyesindeki olayları filtreler ve ekranda listeler.   
+Filtrelenen yüksek önem dereceli olayları otomatik olarak high_events.csv dosyasına kaydeder.   
+Hata Yönetimi ve Timeout: Sunucu kapalı olduğunda programın çökmesini engeller (URLError), yanlış endpoint çağrıldığında HTTP hatalarını yakalar (HTTPError) ve timeout=3 kuralı ile ağ donmalarına karşı koruma sağlar.    
+## 4. Nasıl Çalıştırılır?    
+Projeyi çalıştırmak için iki ayrı terminal penceresi açılması gerekmektedir.    
+### Adım 1: Sunucuyu Başlatın   
+İlk terminalde homework3 dizinine giderek sunucuyu çalıştırın:    
+```Bash
 python server.py
 ```
-(Sunucu terminalini açık bırakın.)
-2. İstemciyi (Client) Başlatmak:
-İkinci bir terminal açın, homework3 klasörüne gidin ve istemciyi çalıştırın:
+(Sunucu http://127.0.0.1:8081 adresinde dinlemeye başlayacaktır. Bu terminal açık bırakılmalıdır.)   
+### Adım 2: İstemciyi Çalıştırın
+İkinci bir terminal açarak istemci kodunu çalıştırın:
 ```Bash
 python client.py
 ```
-Örnek Çıktı
-Client başarıyla çalıştığında terminalde aşağıdaki gibi bir çıktı verir ve yüksek önem dereceli olayları high_events.csv dosyasına kaydeder:
-Plaintext   
-API bağlantısı başarılı.   
+## 5. Örnek Çıktı
+client.py başarıyla çalıştırıldığında konsolda aşağıdaki gibi bir çıktı elde edilir:
+```Plaintext
+API sunucusuna bağlanılıyor...
+API bağlantısı başarılı.
 Toplam olay: 8
-   
-Severity dağılımı:   
+
+Severity dağılımı:
 LOW    : 3
 MEDIUM : 2
 HIGH   : 3
 
-HIGH SEVERITY EVENTS   
-ID: 2  
-Type: bruteforce   
+HIGH SEVERITY EVENTS
+ID: 2
+Type: bruteforce
 
-ID: 5   
+ID: 5
 Type: malware
 
-ID: 8   
-Type: suspicious-login    
-Hata Yönetimi ve Test Edilen Senaryolar   
-Programın kararlı çalışması için aşağıdaki senaryolar try/except blokları ile test edilmiş ve yönetilmiştir:   
-Bağlantı Hatası (Sunucu Kapalı): Sunucu çalıştırılmadan Client çalıştırıldığında programın çökmesi engellenmiş, kullanıcıya API sunucusuna bağlanılamadı. şeklinde bir uyarı verilmesi sağlanmıştır. Ayrıca Client tarafında olası gecikmeler için timeout yapılandırılmıştır.    
-Yanlış Endpoint (HTTP 404): İstemci tarafından geçersiz bir adrese (örn. /api/abc) istek gönderildiğinde, sunucu 404 durum kodu ve {"error": "Endpoint not found"} JSON mesajı döndürmektedir. Client bu durumu yakalayarak HTTP hatası: 404 çıktısı üretir.    
+ID: 8
+Type: suspicious-login
+
+
+Yüksek önem dereceli olaylar 'high_events.csv' dosyasına başarıyla kaydedildi.
+```
+## 6. Test Edilen Hata Senaryoları
+Test 1 – Normal Çalışma: Server açıkken client.py çalıştırılır ve verilerin başarılı bir şekilde çekilerek CSV dosyasına yazıldığı doğrulanır.   
+Test 2 – Yanlış Endpoint: Geçersiz bir URL (/api/abc) çağrıldığında sunucunun 404 durum kodu ve JSON hata mesajı döndürdüğü doğrulanır.   
+Test 3 – Server Kapalı: Server kapalı durumdayken client çalıştırıldığında program çökmez; kullanıcıya anlamlı bir "API sunucusuna bağlanılamadı." bağlantı hatası gösterilir.   
